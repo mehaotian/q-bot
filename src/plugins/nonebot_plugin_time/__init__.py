@@ -34,7 +34,6 @@ __plugin_meta__ = PluginMetadata(
         开启整点报时\n
         关闭整点报时''',
     type="application",
-    homepage="https://github.com/Cvandia/nonebot_plugin_nowtime",
     supported_adapters={"~onebot.v11"},
     extra={
         "unique_name": "nonebot-plugin-nowtime",
@@ -45,7 +44,6 @@ __plugin_meta__ = PluginMetadata(
         开启整点报时\n
         关闭整点报时
         """,
-        "author": "divandia <106718176+Cvandia@users.noreply.github.com>",
         "version": "0.1.5",
     }
 )
@@ -164,7 +162,7 @@ async def post_scheduler():
         for group_id in CONFIG["opened_groups"]:
             try:
                 # 整点语音
-                url = 'https://v.api.aa1.cn/api/api-baoshi/data/baoshi/'
+                url = 'https://image.mehaotian.com/baoshi/'
                 url = url + str(datetime.now().hour) + '.mp3'
                 record = MessageSegment.record(url)
                 await bot.send_group_msg(group_id=int(group_id), message=record)
