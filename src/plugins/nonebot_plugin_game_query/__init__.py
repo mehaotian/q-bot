@@ -1,5 +1,5 @@
 import json
-from nonebot import on_command
+from nonebot import on_keyword
 from nonebot.rule import to_me
 from nonebot.adapters.onebot.v11 import Bot, Event
 from nonebot.adapters.onebot.v11.message import Message
@@ -94,27 +94,16 @@ def mes_creater(result, gamename):
     return mes_list
 
 # aliases={"weather", "查天气"}, 别名
-game = on_command("优惠", rule=to_me(),  priority=10, block=True)
+game = on_keyword("特惠", rule=to_me(),  priority=10, block=True)
 @game.handle()
-async def _(bot: Bot, event: Event,args: Message = CommandArg()):
+async def _(bot: Bot, event: Event):
     gamename = ""
     try:
-        # data = hey_box(1)
-        location = args.extract_plain_text()
-        print(f'------')
-        print(args)
-        # if location.isdigit() and int(location) > 0:
-        #     # location 是一个自然数
-        #     # 在这里执行相应的操作
-        # else:
-        #     # location 不是一个自然数
-        #     # 在这里处理异常情况
-
+        data = hey_box(1)
         await bot.send(event=event,message='正在搜索并生成消息中,请稍等片刻!')
     except Exception as e:
         await bot.send(Message(event=event,message=f"哦吼,获取信息出错了,报错内容为{e},请检查运行日志!"))
 
-    return 
     try:
        await game.finish(Message(f'[CQ:at,qq={event.get_user_id()}] {mes_creater(data, gamename)}'))
 
