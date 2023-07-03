@@ -43,7 +43,8 @@ class MessageBuild:
         else:
             if size:
                 if isinstance(size, float):
-                    img = img.resize((int(img.size[0] * size), int(img.size[1] * size)), Image.ANTIALIAS)
+                    img = img.resize(
+                        (int(img.size[0] * size), int(img.size[1] * size)), Image.ANTIALIAS)
                 elif isinstance(size, tuple):
                     img = img.resize(size, Image.ANTIALIAS)
             if crop:
@@ -51,62 +52,9 @@ class MessageBuild:
             if mode:
                 img = img.convert(mode)
         bio = BytesIO()
-        img.save(bio, format='JPEG' if img.mode == 'RGB' else 'PNG', quality=quality)
+        img.save(bio, format='JPEG' if img.mode ==
+                 'RGB' else 'PNG', quality=quality)
         return MessageSegment.image(bio)
-
-    @classmethod
-    async def StaticImage(cls,
-                          url: str,
-                          size: Optional[Tuple[int, int]] = None,
-                          crop: Optional[Tuple[int, int, int, int]] = None,
-                          quality: Optional[int] = 100,
-                          mode: Optional[str] = None,
-                          tips: Optional[str] = None,
-                          is_check_time: Optional[bool] = True,
-                          check_time_day: Optional[int] = 3
-                          ):
-        """
-            从url下载图片，并预处理并构造成MessageSegment，如果url的图片已存在本地，则直接读取本地图片
-            :param url: 图片url
-            :param size: 预处理尺寸
-            :param crop: 预处理裁剪大小
-            :param quality: 预处理图片质量
-            :param mode: 预处理图像模式
-            :param tips: url中不存在该图片时的提示语
-            :param is_check_time: 是否检查本地图片最后修改时间
-            :param check_time_day: 检查本地图片最后修改时间的天数，超过该天数则重新下载图片
-            :return: MessageSegment.image
-        """
-        path = Path() / 'resources' / url
-        if path.exists() and (
-                not is_check_time or (is_check_time and not check_time(path.stat().st_mtime, check_time_day))):
-            img = Image.open(path)
-        else:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            img = await aiorequests.get_img(url='https://static.cherishmoon.fun/' + url, save_path=path)
-            if img == 'No Such File':
-                return MessageBuild.Text(tips or '缺少该静态资源')
-        if size:
-            img = img.resize(size)
-        if crop:
-            img = img.crop(crop)
-        if mode:
-            img = img.convert(mode)
-        bio = BytesIO()
-        img.save(bio, format='JPEG' if img.mode == 'RGB' else 'PNG', quality=quality)
-        return MessageSegment.image(bio)
-
-    @classmethod
-    def Text(cls, text: str) -> MessageSegment:
-        """
-            过滤文本中的敏感违禁词
-            :param text: 文本
-            :return: MessageSegment.text
-        """
-        for word in ban_word[2:]:
-            if word and word in text:
-                text = text.replace(word, '*' * len(word))
-        return MessageSegment.text(text)
 
     @classmethod
     def Record(cls, path: str) -> MessageSegment:
@@ -152,27 +100,6 @@ async def get_at_target(msg):
         if msg_seg.type == "at":
             return msg_seg.data['qq']
     return None
-
-
-# message预处理，获取uid、干净的msg、user_id、是否缓存
-async def get_uid_in_msg(event: MessageEvent, msg: Union[Message, str]):
-    if isinstance(msg, Message):
-        msg = msg.extract_plain_text().strip()
-    if not msg:
-        uid = await get_last_query(str(event.user_id))
-        return uid, '', str(event.user_id), True
-    user_id = await get_at_target(event.message) or str(event.user_id)
-    use_cache = False if '-r' in msg else True
-    msg = msg.replace('-r', '').strip()
-    find_uid = r'(?P<uid>(1|2|5)\d{8})'
-    for msg_seg in event.message:
-        if msg_seg.type == 'text':
-            match = re.search(find_uid, msg_seg.data['text'])
-            if match:
-                await update_last_query(user_id, match.group('uid'), 'uid')
-                return match.group('uid'), msg.replace(match.group('uid'), '').strip(), user_id, use_cache
-    uid = await get_last_query(user_id)
-    return uid, msg.strip(), user_id, use_cache
 
 
 def get_message_id(event):
