@@ -1,13 +1,18 @@
 import json
-from nonebot import on_keyword
+from datetime import datetime
+from typing import Optional, Tuple
+from nonebot import on_fullmatch, on_regex
 from nonebot.rule import to_me
 from nonebot.adapters.onebot.v11 import Bot, Event
-from nonebot.adapters.onebot.v11.message import Message
-from nonebot.params import CommandArg
+from nonebot.adapters.onebot.v11.message import Message, MessageSegment
+from nonebot.params import RegexGroup
 from .config import *
-from .take_my_money import pic_creater
+from .take_my_money import pic_creater, list_pic_creater
+from .box import get_article_list
 
 # 小黑盒爬虫
+
+
 def hey_box(page: int):
     url = f"https://api.xiaoheihe.cn/game/web/all_recommend/games/?os_type=web&version=999.0.0&show_type=discount&limit=30&offset={str((page - 1) * 30)}"
     json_page = json.loads(other_request(url, headers=header).text)
@@ -57,7 +62,8 @@ def mes_creater(result, gamename):
                 .replace("\n ", "")
                 .replace("    ", "")
             )
-            data = {"type": "node", "data": {"name": "sbeam机器人", "uin": "2854196310", "content": mes}}
+            data = {"type": "node", "data": {
+                "name": "sbeam机器人", "uin": "2854196310", "content": mes}}
             mes_list.append(data)
     else:
         content = f"***数据来源于小黑盒官网***\n游戏{gamename}搜索结果如下"
@@ -68,7 +74,8 @@ def mes_creater(result, gamename):
                 )
             elif "免费" in result[i]["原价"]:
                 mes = mes = (
-                    f"[CQ:image,file={result[i]['图片']}]\n{result[i]['标题']}\n原价:{result[i]['原价']}\n链接:{result[i]['链接']}\nappid:{result[i]['appid']}".strip()
+                    f"[CQ:image,file={result[i]['图片']}]\n{result[i]['标题']}\n原价:{result[i]['原价']}\n链接:{result[i]['链接']}\nappid:{result[i]['appid']}".strip(
+                    )
                     .replace("\n ", "")
                     .replace("    ", "")
                 )
@@ -87,32 +94,36 @@ def mes_creater(result, gamename):
                     .replace("\n ", "")
                     .replace("    ", "")
                 )
-            data = {"type": "node", "data": {"name": "sbeam机器人", "uin": "2854196310", "content": mes}}
+            data = {"type": "node", "data": {
+                "name": "sbeam机器人", "uin": "2854196310", "content": mes}}
             mes_list.append(data)
-    announce = {"type": "node", "data": {"name": "sbeam机器人", "uin": "2854196310", "content": content}}
+    announce = {"type": "node", "data": {
+        "name": "sbeam机器人", "uin": "2854196310", "content": content}}
     mes_list.insert(0, announce)
     return mes_list
 
-# aliases={"weather", "查天气"}, 别名
-game = on_keyword("特惠", rule=to_me(),  priority=10, block=True)
+
+game = on_fullmatch("特惠", rule=to_me(),  priority=10, block=True)
+
+# 获取小黑盒特惠消息
 @game.handle()
 async def _(bot: Bot, event: Event):
     gamename = ""
     try:
         data = hey_box(1)
-        await bot.send(event=event,message='正在搜索并生成消息中,请稍等片刻!')
+        await bot.send(event=event, message='正在搜索并生成消息中,请稍等片刻!')
     except Exception as e:
-        await bot.send(Message(event=event,message=f"哦吼,获取信息出错了,报错内容为{e},请检查运行日志!"))
+        await bot.send(Message(event=event, message=f"哦吼,获取信息出错了,报错内容为{e},请检查运行日志!"))
 
     try:
-       await game.finish(Message(f'[CQ:at,qq={event.get_user_id()}] {mes_creater(data, gamename)}'))
+        await game.finish(Message(f'[CQ:at,qq={event.get_user_id()}] {mes_creater(data, gamename)}'))
 
     except Exception as err:
         if "retcode=100" in str(err):
             # await bot.send(event, "消息可能被风控,正在转为其他形式发送!")
             try:
                 if send_pic_mes:
-                    await bot.send(event,mes_creater(data, gamename))
+                    await bot.send(event, mes_creater(data, gamename))
                     return
                 # print(pic_creater(data, is_steam=False))
                 # await bot.send(event, f"[CQ:image,file={pic_creater(data, is_steam=False)}]")
@@ -122,6 +133,110 @@ async def _(bot: Bot, event: Event):
                     await bot.send(event, "消息可能依旧被风控,无法完成发送!")
         else:
             await bot.send(event, f"发生了其他错误,报错内容为{err},请检查运行日志!")
-    # await jrrp.finish(Message(f'[CQ:at,qq={event.get_user_id()}] 折扣'))
 
+
+# qunlist = on_fullmatch("文章列表",  priority=10, block=True)
+qunlist = on_regex(r"文章列表(?: (?<!\d)(\d+))?$", priority=98, block=True)
+qundetail = on_regex(r"^文章详情 (?<!\d)(\d+)$", priority=99, block=True)
+newts = on_fullmatch("最新推送",  priority=97, block=True)
+
+# 获取群文章列表
+@qunlist.handle()
+async def get_list(bot: Bot, event: Event, args: Tuple[Optional[str], ...] = RegexGroup(),):
+    if args is None or len(args) == 0:
+        page = 1
+    else:
+        page = int(args[0])
+        if page == 0:
+            page = 1
+
+    try:
+        await bot.send(event=event, message=f'正在搜索群主的小黑盒投稿第{page}页,请稍等片刻吼~')
+        data = get_article_list(page)
+    except Exception as e:
+        await bot.send(Message(event=event, message=f"哦吼,没找到呢！可能是获取出错！"))
+
+    # 如果 data 长度为 0 说明没有数据
+    if len(data) == 0:
+        await bot.send(event, "没有找到群主的小黑盒投稿呢！看看是不是页数输错了呢！")
+        return
+
+    try:
+        await bot.send(event, message=Message(f"[CQ:image,file={list_pic_creater(data,page = page)}]"))
+        await bot.send(event, message=Message(f"共为你找到 {len(data)} 篇文章 ，回复 文章详情 + 文章序号，可查看文章详情，如：文章详情 1"))
+    except Exception as err:
+        print(err)
+        if "retcode=100" in str(err):
+            await bot.send(event, "消息可能依旧被风控,无法完成发送!")
+
+
+@qundetail.handle()
+async def get_detail(bot: Bot, event: Event, args: Tuple[Optional[str], ...] = RegexGroup(),):
+    index = int(args[0])
+    if index == 0:
+        await bot.send(event=event, message=f'序号不能为0哦~')
+        return
+
+    page_size = 20
+
+    if index <= 0:
+        page = 1
+    else:
+        page = (index - 1) // page_size + 1
+
+    # 获取当前数字下标
+    if index < 20:
+        idx = index
+    else:
+        idx = index % page_size
+
+    idx = idx - 1
+
+    try:
+        await bot.send(event=event, message=f'正在搜索文章详情,请稍等片刻吼~')
+
+        data = get_article_list(page)
+         # 如果 data 长度为 0 说明没有数据
+        if len(data) == 0:
+            await bot.send(event, "没有找到群主的小黑盒投稿呢！看看是不是输错了呢！")
+            return
+
+        res = data[idx]
+       
+        at = MessageSegment.at(event.user_id)
+        image = MessageSegment(type="image", data={"file": res['图片']})
+        content = f'\n\n为您找到如下文章 \n标题：{res["标题"]} \n链接：{res["链接"]}'
+
+        await bot.send(event=event, message=Message(at + content + "\n" +image ))
+    except Exception as err:
+        if "retcode=100" in str(err):
+            await bot.send(event, "消息可能被风控,无法完成发送!")
+        else:
+            await bot.send(Message(event=event, message=f"哦吼,没找到呢！可能是获取出错！"))
+
+@newts.handle()
+async def get_newts(bot: Bot, event: Event):
+    index = 0 
+    page = 1
+    try:
+        await bot.send(event=event, message=f'正在拉取最新推送文章,请稍等片刻吼~')
+
+        data = get_article_list(page)
+         # 如果 data 长度为 0 说明没有数据
+        if len(data) == 0:
+            await bot.send(event, "没有找到群主的小黑盒投稿呢！看看是不是输错了呢！")
+            return
+
+        res = data[index]
+       
+        at = MessageSegment.at(event.user_id)
+        image = MessageSegment(type="image", data={"file": res['图片']})
+        content = f'\n\n群主最新文章，赶快送上你的5电哦~ \n标题：{res["标题"]} \n链接：{res["链接"]}'
+
+        await bot.send(event=event, message=Message(at + content + "\n" +image ))
+    except Exception as err:
+        if "retcode=100" in str(err):
+            await bot.send(event, "消息可能被风控,无法完成发送!")
+        else:
+            await bot.send(Message(event=event, message=f"哦吼,没找到呢！可能是获取出错！"))
 
