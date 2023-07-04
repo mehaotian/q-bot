@@ -143,7 +143,7 @@ newts = on_fullmatch("最新推送",  priority=97, block=True)
 # 获取群文章列表
 @qunlist.handle()
 async def get_list(bot: Bot, event: Event, args: Tuple[Optional[str], ...] = RegexGroup(),):
-    if args is None or len(args) == 0:
+    if  len(args) == 0 or args[0] == None:
         page = 1
     else:
         page = int(args[0])
