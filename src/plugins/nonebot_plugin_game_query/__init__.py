@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from typing import Optional, Tuple
-from nonebot import on_fullmatch, on_regex
+from nonebot import on_fullmatch, on_regex ,on_command
 from nonebot.rule import to_me
 from nonebot.adapters.onebot.v11 import Bot, Event
 from nonebot.adapters.onebot.v11.message import Message, MessageSegment
@@ -10,9 +10,21 @@ from .config import *
 from .take_my_money import pic_creater, list_pic_creater
 from .box import get_article_list
 
+
+# 菜单指令
+menu_handle = on_command('群主文章', rule = to_me(), priority=5, block=True)
+@menu_handle.handle()
+async def menu(bot: Bot, event: Event):
+    message = f"\
+    执行以下命令可以查询群主的文章哦~\n\
+    1. 文章列表 + 页码（默认为1），例：文章列表 1 \n\
+    2. 文章详情 + 文章序号，例：文章详情 12 \n\
+    3. 最新推送\
+    "
+    print(message)
+    await bot.send(event=event, message=message) 
+
 # 小黑盒爬虫
-
-
 def hey_box(page: int):
     url = f"https://api.xiaoheihe.cn/game/web/all_recommend/games/?os_type=web&version=999.0.0&show_type=discount&limit=30&offset={str((page - 1) * 30)}"
     json_page = json.loads(other_request(url, headers=header).text)
