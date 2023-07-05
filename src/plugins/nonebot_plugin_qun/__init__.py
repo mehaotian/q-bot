@@ -8,7 +8,7 @@ from nonebot.adapters.onebot.v11 import Bot, GroupIncreaseNoticeEvent, \
 from .path import *
 from .welcome_utils.config import config
 from .welcome_utils.message_util import MessageBuild
-from .config import *
+from .config import get_wel_word
 
 # 进去通知指令
 notice_handle = on_notice(priority=5, block=True)
@@ -29,10 +29,12 @@ async def menu(bot: Bot, event: Event):
 # 进群通知
 @notice_handle.handle()
 async def GroupNewMember(bot: Bot, event: GroupIncreaseNoticeEvent):
+    print(1111)
     greet_emoticon = MessageBuild.Image(bg_file,size=(300,300), mode='RGBA')
     if event.user_id == event.self_id:
         await bot.send_group_msg(group_id=event.group_id, message=Message(
             MessageSegment.text('这是哪里？哦？让我康康！\n') + greet_emoticon))
-    elif event.group_id not in config.paimon_greet_ban:
+    # elif event.group_id not in config.paimon_greet_ban:
+    else:
         await bot.send_group_msg(group_id=event.group_id, message=Message(
-            MessageSegment.at(event.user_id) + MessageSegment.text(f'{get_wel_word(greetings)}\n') + greet_emoticon))
+            MessageSegment.at(event.user_id) + MessageSegment.text(f'{get_wel_word()}\n') + greet_emoticon))

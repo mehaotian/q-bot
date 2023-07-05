@@ -11,5 +11,5 @@ greetings = [
 ]
 
 # 匹配词库
-def get_wel_word(text) -> str:
-    return random.choice(text)
+def get_wel_word() -> str:
+    return random.choice(greetings)
