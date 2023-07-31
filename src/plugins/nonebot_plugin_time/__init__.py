@@ -194,9 +194,9 @@ async def get_word_result() -> str:
 
 
 # 添加定时任务
-try:
-    scheduler.add_job(
-        post_scheduler, "cron", hour='*', id="everyday_nowtime"
-    )
-except ActionFailed as e:
-    logger.warning(f"定时任务添加失败，{repr(e)}")
+# try:
+#     scheduler.add_job(
+#         post_scheduler, "cron", hour='*', id="everyday_nowtime"
+#     )
+# except ActionFailed as e:
+#     logger.warning(f"定时任务添加失败，{repr(e)}")
