@@ -1,0 +1,76 @@
+{
+  起始之地: {
+    require_level: 1,
+    owned: [
+      {
+        name: "新手村",
+        weight: 3,
+      },
+      {
+        name: "幽静林地",
+        weight: 1,
+      },
+      {
+        name: "溪流之滨",
+        weight: 1,
+      },
+      {
+        name: "群山脚下",
+        weight: 1,
+      },
+    ],
+    public: true,
+    description: "你咕呱坠地，诞生在了{owned}，这里很安全",
+  },
+  新手村: {
+    require_level: 1,
+    public: true,
+    owned: [
+      {
+        name: "村北小路",
+        weight: 1,
+      },
+      {
+        name: "王寡妇家门口",
+        weight: 1,
+      },
+      {
+        name: "村广场",
+        weight: 1,
+      },
+      {
+        name: "幽静林地",
+        weight: 0.5,
+      },
+    ],
+    description: "新手村，这里很安全，你可以打打鸡，杀杀鹅。",
+  },
+  村北小路: {
+    require_level: 1,
+    owned: [
+      {
+        name: "起始之森区域四",
+        weight: 0.5,
+      },
+    ],
+    enemy_list: [
+      {
+        name: "公猴子",
+        lv: 3,
+        weight: 12,
+      },
+      {
+        name: "母猴子",
+        lv: 3,
+        weight: 6,
+      },
+      {
+        name: "鹿鹿",
+        lv: 3,
+        weight: 1,
+      },
+    ],
+    public: false,
+    description: "充满了烦人的猴子",
+  },
+}
