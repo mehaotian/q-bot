@@ -1,0 +1,43 @@
+[
+  {
+    "type": "money_add",
+    "name": "增加金钱",
+    "chance" : 50
+  },
+  {
+    "type": "money_reduce",
+    "name": "减少金钱",
+    "chance" : 18
+  },
+  {
+    "type": "exp_add",
+    "name": "增加经验",
+    "chance" : 50
+  },
+  {
+    "type": "exp_reduce",
+    "name": "减少经验",
+    "chance" : 12
+  },
+  {
+    "type": "prop_add",
+    "name": "增加装备",
+    "chance" : 6
+  },
+  {
+    "type": "cheat_add",
+    "name": "增加秘籍",
+    "chance" : 4
+  },
+  {
+    "type": "encounter",
+    "name": "遭遇副本",
+    "chance" : 9999
+
+  },
+  {
+    "type": "nothing",
+    "name": "无事发生",
+    "chance" : 50
+  }
+]
